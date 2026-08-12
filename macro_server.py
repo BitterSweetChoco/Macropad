@@ -133,8 +133,18 @@ def execute_command(command_type, args):
         except Exception as e:
             print(f"Ошибка запуска: {e}")
     elif command_type == 'text':
+        # Копируем текст в буфер обмена
         pyperclip.copy(args[0])
-        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(0.2)  # Даём буферу обмена время обновиться
+
+        # Пытаемся вставить через Ctrl+V
+        try:
+            pyautogui.hotkey('ctrl', 'v')
+        except Exception as e:
+            print(f"Ошибка вставки через Ctrl+V: {e}, пробуем typewrite...")
+            # Если не работает, используем медленный набор текста
+            pyautogui.typewrite(args[0], interval=0.02)
+
     elif command_type == 'system':
         subprocess.Popen(args[0], shell=True)
     elif command_type == 'script':
