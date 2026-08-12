@@ -2,7 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
 
-// ==================== ПРОТОТИПЫ ФУНКЦИЙ ====================
+// ==================== ПРОТОТИПЫ ====================
 void switchLayer();
 void handleKeyPress(char key);
 void updateDisplay();
@@ -24,9 +24,13 @@ byte rowPins[ROWS] = {2, 3, 4, 5};
 byte colPins[COLS] = {6, 7, 8, 9};
 
 // Джойстик
-#define JOY_SW_PIN 10   // кнопка джойстика
-#define JOY_X_PIN A0
-#define JOY_Y_PIN A1
+#define JOY_SW_PIN 10   // кнопка джойстика (слои)
+#define JOY_X_PIN A0    // ось X (влево/вправо – треки)
+#define JOY_Y_PIN A1    // ось Y (вверх/вниз – громкость)
+
+// Параметры джойстика (мультимедиа)
+#define JOY_DEADZONE 200        // мёртвая зона (512 ± 200)
+#define JOY_REPEAT_DELAY 150    // задержка повтора при удержании (мс)
 
 // ==================== ОБЪЕКТЫ ====================
 LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLS, LCD_ROWS);
@@ -43,7 +47,11 @@ int currentLayer = 0; // активный слой (0..3)
 // ==================== ПЕРЕМЕННЫЕ ДЛЯ КНОПКИ ДЖОЙСТИКА ====================
 bool lastJoySW = HIGH;
 unsigned long lastJoyDebounce = 0;
-#define DEBOUNCE_DELAY 250  // задержка против дребезга
+#define DEBOUNCE_DELAY 250
+
+// ==================== ПЕРЕМЕННЫЕ ДЛЯ МУЛЬТИМЕДИА (оси) ====================
+unsigned long lastJoyMediaEvent = 0;
+String lastJoyDirection = "";
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 void setup() {
@@ -52,10 +60,8 @@ void setup() {
   pinMode(JOY_SW_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
-  Serial.println("Ready");
-  //while (!Serial); // ждём открытия порта
+  Serial.println("Ready");   // тестовое сообщение
 
-  // Приветственное сообщение
   lcd.setCursor(0,0);
   lcd.print("Macropad Ready");
   lcd.setCursor(0,1);
@@ -67,7 +73,7 @@ void setup() {
 
 // ==================== ОСНОВНОЙ ЦИКЛ ====================
 void loop() {
-  // 1. Проверка кнопки джойстика (с антидребезгом)
+  // 1. Проверка кнопки джойстика (с антидребезгом, смена слоя)
   bool joySW = digitalRead(JOY_SW_PIN);
   if (joySW == LOW && lastJoySW == HIGH) {
     unsigned long now = millis();
@@ -83,6 +89,34 @@ void loop() {
   if (key) {
     handleKeyPress(key);
   }
+
+  // 3. Оси джойстика – мультимедиа
+  int x = analogRead(JOY_X_PIN);
+  int y = analogRead(JOY_Y_PIN);
+
+  String direction = "";
+
+  if (x < 512 - JOY_DEADZONE) {
+    direction = "LEFT";       // предыдущий трек
+  } else if (x > 512 + JOY_DEADZONE) {
+    direction = "RIGHT";      // следующий трек
+  } else if (y < 512 - JOY_DEADZONE) {
+    direction = "UP";         // громкость вверх
+  } else if (y > 512 + JOY_DEADZONE) {
+    direction = "DOWN";       // громкость вниз
+  }
+
+  if (direction != "") {
+    if (direction != lastJoyDirection || millis() - lastJoyMediaEvent > JOY_REPEAT_DELAY) {
+      Serial.print("J:");
+      Serial.println(direction);
+      lastJoyMediaEvent = millis();
+    }
+  } else {
+    // Джойстик в нейтрали – сбрасываем направление
+    lastJoyDirection = "";
+  }
+  lastJoyDirection = direction;
 }
 
 // ==================== ПЕРЕКЛЮЧЕНИЕ СЛОЯ ====================
@@ -99,12 +133,10 @@ void switchLayer() {
 
 // ==================== ОБРАБОТКА НАЖАТИЯ КЛАВИШИ ====================
 void handleKeyPress(char key) {
-  // Формируем команду: "LAYER:KEY" (например, "1:C")
   Serial.print(currentLayer);
   Serial.print(':');
   Serial.println(key);
 
-  // Обновляем дисплей
   lcd.setCursor(0,1);
   lcd.print("Last: L");
   lcd.print(currentLayer+1);
