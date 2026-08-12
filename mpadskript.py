@@ -1,13 +1,31 @@
 import serial
+import serial.tools.list_ports
 import pyautogui
 import subprocess
 import time
 import pyperclip
 
-# Настройки COM-порта
-SERIAL_PORT = 'COM7'
+# ===== Автоматический поиск макропада =====
+def find_macropad_port():
+    """Ищет последовательный порт, к которому подключён макропад."""
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        # Проверяем по описанию (можно добавить свои ключевые слова)
+        description = port.description.lower()
+        if any(key in description for key in ["usb serial", "arduino", "ch340", "cp210x", "com"]):
+            return port.device
+    return None
+
+SERIAL_PORT = find_macropad_port()
+if SERIAL_PORT is None:
+    print("❌ Макропад не найден. Подключите устройство и проверьте драйверы.")
+    exit(1)
+else:
+    print(f"✅ Найден порт: {SERIAL_PORT}")
+
 BAUD_RATE = 115200
 
+# ===== Словарь команд =====
 COMMANDS = {
     # ===== СЛОЙ 0: ГОРЯЧИЕ КЛАВИШИ =====
     (0, '1'): ['hotkey', 'ctrl', 'c'],
@@ -51,13 +69,13 @@ COMMANDS = {
     (2, '3'): ['text', 'Sashars790@gmail.com'],
     (2, '4'): ['text', 'My card: https://bittersweetchoco.github.io/businessCard/'],
     (2, '5'): ['text', 'My GitHub: https://github.com/BitterSweetChoco'],
-    (2, '6'): ['text', '+7 996 ****'],
-    (2, '7'): ['text', '+7 991 ****'],
+    (2, '6'): ['text', '+7 996 746-82-96'],
+    (2, '7'): ['text', '+7 991 969-29-97'],
     (2, '8'): ['text', 'https://github.com'],
     (2, '9'): ['text', 'Срочно'],
     (2, '0'): ['text', 'Нужно добавить задачу'],
-    (2, 'A'): ['text', 'T.me/P***'],
-    (2, 'B'): ['text', 'T.me/T***'],
+    (2, 'A'): ['text', 'T.me/Psychopoplovok'],
+    (2, 'B'): ['text', 'T.me/TeaAndSarcasm'],
     (2, 'C'): ['text', 'Best regards,'],
     (2, 'D'): ['text', 'Шаблон кода:'],
     (2, '*'): ['text', 'Срочно!'],
@@ -83,20 +101,16 @@ COMMANDS = {
 }
 
 def execute_command(command_type, args):
-    """args - список аргументов (например, для hotkey: ['ctrl','c'] или для launch: ['notepad'])"""
+    """Выполняет команду. args — список аргументов."""
     if command_type == 'hotkey':
-        # args содержит все клавиши комбинации
         pyautogui.hotkey(*args)
     elif command_type == 'launch':
-        # запуск напрямую через subprocess, без Win+R
-        # args[0] – исполняемый файл, остальное – аргументы командной строки
         try:
             subprocess.Popen(args, shell=True)
         except Exception as e:
-            print(f"Launch error: {e}")
+            print(f"Ошибка запуска: {e}")
     elif command_type == 'text':
-        text = args[0]  # args – список, берём первый элемент
-        pyperclip.copy(text)
+        pyperclip.copy(args[0])
         pyautogui.hotkey('ctrl', 'v')
     elif command_type == 'system':
         subprocess.Popen(args[0], shell=True)
@@ -114,34 +128,41 @@ def execute_command(command_type, args):
 def main():
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-        print(f"Listening on {SERIAL_PORT}...")
-        time.sleep(2)
+        print(f"Слушаю порт {SERIAL_PORT}...")
+        time.sleep(2)          # даём устройству время на инициализацию
         ser.reset_input_buffer()
 
         while True:
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if not line:
                 continue
-            print(f"Received: {line}")
+            print(f"Получено: {line}")
+
+            # Пропускаем строки без двоеточия (служебные сообщения, типа "Ready")
+            if ':' not in line:
+                print(f"Игнорируем служебное сообщение: {line}")
+                continue
+
             try:
-                layer_str, key = line.split(':')
+                layer_str, key = line.split(':', 1)   # разделяем по первому двоеточию
                 layer = int(layer_str)
                 if (layer, key) in COMMANDS:
                     cmd = COMMANDS[(layer, key)]
-                    # cmd[0] – тип команды, cmd[1:] – список аргументов
                     execute_command(cmd[0], cmd[1:])
-                    print(f"Executed: {cmd}")
+                    print(f"Выполнено: {cmd}")
                 else:
-                    print(f"No action for L{layer} K{key}")
+                    print(f"Нет действия для L{layer} K{key}")
             except Exception as e:
-                print(f"Parse error: {e}")
+                print(f"Ошибка разбора: {e}")
+
     except serial.SerialException as e:
-        print(f"Serial error: {e}")
+        print(f"Ошибка последовательного порта: {e}")
     except KeyboardInterrupt:
-        print("Exit by user")
+        print("Выход по запросу пользователя")
     finally:
         if 'ser' in locals() and ser.is_open:
             ser.close()
+            print("Порт закрыт.")
 
 if __name__ == '__main__':
     main()
