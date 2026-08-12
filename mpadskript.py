@@ -5,27 +5,40 @@ import subprocess
 import time
 import pyperclip
 
-# ===== Автоматический поиск макропада =====
+# ===== Автоматический поиск порта с чипом CH340 =====
 def find_macropad_port():
-    """Ищет последовательный порт, к которому подключён макропад."""
+    """Ищет последовательный порт, на котором висит устройство с CH340."""
     ports = serial.tools.list_ports.comports()
     for port in ports:
-        # Проверяем по описанию (можно добавить свои ключевые слова)
         description = port.description.lower()
-        if any(key in description for key in ["usb serial", "arduino", "ch340", "cp210x", "com"]):
+        # Ищем именно CH340 (можно добавить и другие ключевые слова)
+        if "ch340" in description:
+            return port.device
+    # Если не нашли CH340, пробуем другие распространённые варианты
+    for port in ports:
+        description = port.description.lower()
+        if any(key in description for key in ["usb serial", "arduino", "cp210x"]):
             return port.device
     return None
 
+# Пытаемся найти порт автоматически
 SERIAL_PORT = find_macropad_port()
+
+# Если не найден – предлагаем ввести вручную или используем запасной
 if SERIAL_PORT is None:
-    print("❌ Макропад не найден. Подключите устройство и проверьте драйверы.")
-    exit(1)
+    print("❌ Автоматически порт не найден.")
+    manual = input("Введите имя порта вручную (например, COM8) или нажмите Enter для выхода: ").strip()
+    if manual:
+        SERIAL_PORT = manual
+    else:
+        print("Выход.")
+        exit(1)
 else:
     print(f"✅ Найден порт: {SERIAL_PORT}")
 
 BAUD_RATE = 115200
 
-# ===== Словарь команд =====
+# ===== Словарь команд (ваш, без изменений) =====
 COMMANDS = {
     # ===== СЛОЙ 0: ГОРЯЧИЕ КЛАВИШИ =====
     (0, '1'): ['hotkey', 'ctrl', 'c'],
@@ -69,8 +82,8 @@ COMMANDS = {
     (2, '3'): ['text', 'Sashars790@gmail.com'],
     (2, '4'): ['text', 'My card: https://bittersweetchoco.github.io/businessCard/'],
     (2, '5'): ['text', 'My GitHub: https://github.com/BitterSweetChoco'],
-    (2, '6'): ['text', '+7 996 746-82-96'],
-    (2, '7'): ['text', '+7 991 969-29-97'],
+    (2, '6'): ['text', '+7 996 ****'],
+    (2, '7'): ['text', '+7 991 ****'],
     (2, '8'): ['text', 'https://github.com'],
     (2, '9'): ['text', 'Срочно'],
     (2, '0'): ['text', 'Нужно добавить задачу'],
@@ -101,7 +114,7 @@ COMMANDS = {
 }
 
 def execute_command(command_type, args):
-    """Выполняет команду. args — список аргументов."""
+    """Выполняет команду."""
     if command_type == 'hotkey':
         pyautogui.hotkey(*args)
     elif command_type == 'launch':
@@ -129,7 +142,7 @@ def main():
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
         print(f"Слушаю порт {SERIAL_PORT}...")
-        time.sleep(2)          # даём устройству время на инициализацию
+        time.sleep(2)
         ser.reset_input_buffer()
 
         while True:
@@ -138,13 +151,13 @@ def main():
                 continue
             print(f"Получено: {line}")
 
-            # Пропускаем строки без двоеточия (служебные сообщения, типа "Ready")
+            # Игнорируем строки без двоеточия (служебные, типа "Ready")
             if ':' not in line:
                 print(f"Игнорируем служебное сообщение: {line}")
                 continue
 
             try:
-                layer_str, key = line.split(':', 1)   # разделяем по первому двоеточию
+                layer_str, key = line.split(':', 1)
                 layer = int(layer_str)
                 if (layer, key) in COMMANDS:
                     cmd = COMMANDS[(layer, key)]
