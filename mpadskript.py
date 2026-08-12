@@ -38,7 +38,7 @@ else:
 
 BAUD_RATE = 115200
 
-# ===== Словарь команд (ваш, без изменений) =====
+# ===== Словарь команд (с исправленными win → winleft) =====
 COMMANDS = {
     # ===== СЛОЙ 0: ГОРЯЧИЕ КЛАВИШИ =====
     (0, '1'): ['hotkey', 'ctrl', 'c'],
@@ -51,11 +51,11 @@ COMMANDS = {
     (0, '8'): ['hotkey', 'ctrl', 'f'],
     (0, '9'): ['hotkey', 'ctrl', 'p'],
     (0, '0'): ['hotkey', 'alt', 'tab'],
-    (0, 'A'): ['hotkey', 'win', 'd'],
+    (0, 'A'): ['hotkey', 'winleft', 'd'],      # ← Win+D
     (0, 'B'): ['hotkey', 'ctrl', 'shift', 'esc'],
-    (0, 'C'): ['hotkey', 'win', 'e'],
-    (0, 'D'): ['hotkey', 'win', 'r'],
-    (0, '*'): ['hotkey', 'win', 'l'],
+    (0, 'C'): ['hotkey', 'winleft', 'e'],      # ← Win+E
+    (0, 'D'): ['hotkey', 'winleft', 'r'],      # ← Win+R
+    (0, '*'): ['hotkey', 'winleft', 'l'],      # ← Win+L
     (0, '#'): ['hotkey', 'alt', 'f4'],
 
     # ===== СЛОЙ 1: ПРОГРАММЫ =====
@@ -101,7 +101,7 @@ COMMANDS = {
     (3, '4'): ['volume', 'up'],
     (3, '5'): ['volume', 'down'],
     (3, '6'): ['volume', 'mute'],
-    (3, '7'): ['hotkey', 'win', 'printscreen'],
+    (3, '7'): ['hotkey', 'winleft', 'printscreen'],  # ← Win+PrintScreen
     (3, '8'): ['system', 'notepad'],
     (3, '9'): ['system', 'explorer shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}'],
     (3, '0'): ['system', 'taskkill /f /im telegram.exe'],
@@ -114,9 +114,18 @@ COMMANDS = {
 }
 
 def execute_command(command_type, args):
-    """Выполняет команду."""
+    """Выполняет команду. Для Win-комбинаций используется ручная эмуляция с паузой."""
     if command_type == 'hotkey':
-        pyautogui.hotkey(*args)
+        # Если первая клавиша - winleft или winright, используем ручную эмуляцию
+        if args[0].startswith('win'):
+            pyautogui.keyDown(args[0])
+            time.sleep(0.05)          # небольшая задержка для стабильности
+            for key in args[1:]:
+                pyautogui.press(key)
+                time.sleep(0.05)
+            pyautogui.keyUp(args[0])
+        else:
+            pyautogui.hotkey(*args)
     elif command_type == 'launch':
         try:
             subprocess.Popen(args, shell=True)
