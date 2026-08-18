@@ -55,56 +55,56 @@ COMMANDS = {
     (0, '#'): ['hotkey', 'alt', 'f4'],
 
     # ----- СЛОЙ 1: ПРОГРАММЫ -----
-    (1, '1'): ['launch', r'C:\Users\Admin\Downloads\tportable-x64.6.0.2\Telegram\Telegram.exe'],
-    (1, '2'): ['launch', r'C:\Users\Admin\AppData\Local\Discord\Update.exe', '--processStart', 'Discord.exe'],
-    (1, '3'): ['launch', r'C:\Program Files\Yandex\YandexBrowser\Application\browser.exe', '--profile-directory=Default'],
-    (1, '4'): ['launch', 'calc'],
-    (1, '5'): ['launch', 'cmd'],
+    (1, '1'): ['launch', r'C:\Users\Admin\Downloads\tportable-x64.6.0.2\Telegram\Telegram.exe'], 
+    (1, '2'): ['launch', r'C:\Users\Admin\AppData\Local\Discord\Update.exe', '--processStart', 'Discord.exe'], 
+    (1, '3'): ['launch', r'C:\Program Files\Yandex\YandexBrowser\Application\browser.exe', '--profile-directory=Default'], 
+    (1, '4'): ['launch', 'calc'], 
+    (1, '5'): ['launch', 'cmd'], 
     (1, '6'): ['launch', 'cmd'],
-    (1, '7'): ['launch', r'C:\Users\Admin\AppData\Local\Programs\Obsidian\Obsidian.exe'],
-    (1, '8'): ['launch', 'notepad'],
+    (1, '7'): ['launch', r'C:\Users\Admin\AppData\Local\Programs\Obsidian\Obsidian.exe'], 
+    (1, '8'): ['launch', 'notepad'], 
     (1, '9'): ['launch', 'code'],
     (1, '0'): ['launch', 'taskmgr'],
     (1, 'A'): ['launch', 'control'],
     (1, 'B'): ['launch', 'ms-settings:'],
-    (1, 'C'): ['launch', r'C:\Users\Admin\AppData\Local\Programs\YandexMusicMod\Яндекс Музыка.exe'],
+    (1, 'C'): ['launch', r'C:\Users\Admin\AppData\Local\Programs\YandexMusic\Яндекс Музыка.exe'], 
     (1, 'D'): ['launch', 'vlc'],
-    (1, '*'): ['launch', r'C:\Program Files (x86)\Steam\Steam.exe'],
-    (1, '#'): ['launch', 'powershell'],
+    (1, '*'): ['launch', r'C:\Program Files (x86)\Steam\Steam.exe'], #
+    (1, '#'): ['launch', 'powershell'], 
 
     # ----- СЛОЙ 2: ТЕКСТ -----
     (2, '1'): ['text', 'С уважением, Александр'],
     (2, '2'): ['text', 'Celestia@neko2.net'],
-    (2, '3'): ['text', 'Sashars790@gmail.com'],
+    (2, '3'): ['text', 'S****@gmail.com'],
     (2, '4'): ['text', 'My card: https://bittersweetchoco.github.io/businessCard/'],
     (2, '5'): ['text', 'My GitHub: https://github.com/BitterSweetChoco'],
     (2, '6'): ['text', '+7 996 ****'],
     (2, '7'): ['text', '+7 991 ****'],
     (2, '8'): ['text', 'https://github.com'],
-    (2, '9'): ['text', 'Срочно'],
-    (2, '0'): ['text', 'Нужно добавить задачу'],
+    (2, '9'): ['text', 'Скинь ссылку'],
+    (2, '0'): ['text', 'Я пока занят, отвечу позже'],
     (2, 'A'): ['text', 'T.me/Psychopoplovok'],
     (2, 'B'): ['text', 'T.me/TeaAndSarcasm'],
-    (2, 'C'): ['text', 'Best regards,'],
-    (2, 'D'): ['text', 'Шаблон кода:'],
+    (2, 'C'): ['text', 'Благодарю'],
+    (2, 'D'): ['text', 'Нет, не срочно'],
     (2, '*'): ['text', 'Срочно!'],
     (2, '#'): ['text', 'if __name__ == "__main__":'],
 
     # ----- СЛОЙ 3: СИСТЕМА / СКРИПТЫ -----
     (3, '1'): ['system', 'shutdown /s /t 60'],
     (3, '2'): ['system', 'shutdown /r /t 0'],
-    (3, '3'): ['script', r'C:\scripts\myscript.bat'],
-    (3, '4'): ['volume', 'up'],
-    (3, '5'): ['volume', 'down'],
-    (3, '6'): ['volume', 'mute'],
+    (3, '3'): ['hotkey', 'alt', 'shift'], # Переключение языка
+    (3, '4'): ['system', 'explorer shell:Downloads'], # Открыть папку «Загрузки»
+    (3, '5'): ['system', 'explorer shell:Personal'], # Открыть «Документы»
+    (3, '6'): ['hotkey', 'winleft', 'l'], # Блокировка экрана
     (3, '7'): ['hotkey', 'winleft', 'printscreen'],
-    (3, '8'): ['system', 'notepad'],
-    (3, '9'): ['system', 'explorer shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}'],
-    (3, '0'): ['system', 'taskkill /f /im telegram.exe'],
-    (3, 'A'): ['system', 'control'],
+    (3, '8'): ['script', 'powershell Start-Process powershell -Verb RunAs'], # Открыть PowerShell от имени администратора
+    (3, '9'): ['system', 'ms-settings:network-wifi'], # Открыть настройки Wi-Fi
+    (3, '0'): ['system', 'ms-settings:bluetooth'], # Открыть настройки Bluetooth
+    (3, 'A'): ['system', 'PowerShell Clear-RecycleBin -Force'], # Очистить корзину
     (3, 'B'): ['system', 'mspaint'],
     (3, 'C'): ['system', 'write'],
-    (3, 'D'): ['system', 'calc'],
+    (3, 'D'): ['volume', 'mute'],
     (3, '*'): ['system', 'cleanmgr'],
     (3, '#'): ['system', 'dxdiag'],
 
